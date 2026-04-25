@@ -1,0 +1,6 @@
+# Linux-Skripte muessen LF-Endings behalten — sonst rennt Bash auf '\r'.
+*.sh text eol=lf
+*.desktop text eol=lf
+
+# Windows-Batches behalten CRLF.
+*.bat text eol=crlf

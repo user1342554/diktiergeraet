@@ -1,8 +1,9 @@
-"""Findet den Monitor, auf dem das aktive Fenster liegt (Windows only)."""
+"""Windows-Backend: Monitor-Erkennung via Win32 + Chroma-Key-Transparenz."""
 from __future__ import annotations
 
 import ctypes
 import ctypes.wintypes as wt
+import tkinter as tk
 from dataclasses import dataclass
 
 
@@ -42,8 +43,7 @@ def _primary_workarea_fallback() -> Rect:
 
 
 def active_window_workarea() -> Rect:
-    """Liefert die Work-Area (ohne Taskleiste) des Monitors, auf dem
-    das aktuell fokussierte Fenster liegt. Fallback: Primary-Monitor."""
+    """Work-Area des Monitors, auf dem das fokussierte Fenster liegt."""
     user32 = ctypes.windll.user32
     try:
         hwnd = user32.GetForegroundWindow()
@@ -60,3 +60,30 @@ def active_window_workarea() -> Rect:
         return Rect(r.left, r.top, r.right, r.bottom)
     except Exception:
         return _primary_workarea_fallback()
+
+
+def configure_overlay_window(root: tk.Tk, panel_color: str, chroma_color: str) -> bool:
+    """Konfiguriert das Overlay-Root-Window plattformspezifisch.
+
+    Windows: Chroma-Key-Trick — das Root-Window wird mit `chroma_color` gefuellt;
+    Pixel exakt dieser Farbe rendert Windows als transparent. Das innere
+    runde CTkFrame schwebt dadurch frei auf dem Desktop.
+
+    Returns True wenn der Chroma-Key aktiv ist (Caller laesst den Outer-Pad).
+    Returns False als Fallback (Caller faerbt das Root in panel_color um).
+    """
+    try:
+        # CTk-Root: fg_color setzen
+        root.configure(fg_color=chroma_color)  # type: ignore[call-arg]
+    except Exception:
+        pass
+    try:
+        root.wm_attributes("-transparentcolor", chroma_color)
+        return True
+    except tk.TclError:
+        # Falls der Treiber das nicht unterstuetzt: Fallback auf Panel-BG.
+        try:
+            root.configure(fg_color=panel_color)  # type: ignore[call-arg]
+        except Exception:
+            pass
+        return False

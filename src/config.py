@@ -1,9 +1,14 @@
-"""Persistente Konfiguration in %APPDATA%\\Diktiergeraet\\config.json."""
+"""Persistente Konfiguration.
+
+- Windows: ``%APPDATA%\\Diktiergeraet\\config.json``
+- Linux:   ``$XDG_CONFIG_HOME/Diktiergeraet/config.json`` (Default ``~/.config``)
+"""
 from __future__ import annotations
 
 import json
 import os
-from dataclasses import asdict, dataclass, field, fields
+import sys
+from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Optional
 
@@ -13,11 +18,13 @@ AVAILABLE_LANGUAGES = ["de", "en", "auto"]
 
 
 def _config_dir() -> Path:
-    appdata = os.environ.get("APPDATA")
-    if appdata:
-        base = Path(appdata)
+    if sys.platform == "win32":
+        appdata = os.environ.get("APPDATA")
+        base = Path(appdata) if appdata else Path.home() / "AppData" / "Roaming"
     else:
-        base = Path.home() / "AppData" / "Roaming"
+        # XDG Base Directory Spec — auf Linux/macOS Standard
+        xdg = os.environ.get("XDG_CONFIG_HOME")
+        base = Path(xdg) if xdg else Path.home() / ".config"
     d = base / "Diktiergeraet"
     d.mkdir(parents=True, exist_ok=True)
     return d

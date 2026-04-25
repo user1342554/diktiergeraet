@@ -5,5 +5,9 @@ pynput>=1.7.7
 pystray>=0.19.5
 Pillow>=10.0
 pyperclip>=1.8.2
+customtkinter>=5.2
+# Multi-Monitor-Erkennung auf Linux (Windows nutzt Win32 direkt)
+screeninfo>=0.8; sys_platform == "linux"
+# CUDA-Runtime — pip-Pakete; auf Linux koennen System-Libs alternativ genutzt werden
 nvidia-cublas-cu12
 nvidia-cudnn-cu12==9.*
